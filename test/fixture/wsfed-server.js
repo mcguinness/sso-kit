@@ -1,4 +1,6 @@
 var express = require('express');
+var bodyParser = require('body-parser');
+var session = require('express-session');
 var http = require('http');
 var wsfed = require('wsfed');
 var xtend = require('xtend');
@@ -59,14 +61,16 @@ module.exports.start = function(options, callback){
 
   var app = express();
 
-  app.configure(function(){
-    this.use(express.bodyParser());
-    this.use(passport.initialize());
-    this.use(passport.session());
-    this.use(function(req,res,next){
-      req.user = fakeUser;
-      next();
-    });
+  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(session({
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: true}));
+  app.use(passport.initialize());
+  app.use(passport.session());
+  app.use(function(req,res,next){
+    req.user = fakeUser;
+    next();
   });
 
   function getPostURL (wtrealm, wreply, req, callback) {

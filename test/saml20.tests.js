@@ -58,8 +58,8 @@ describe('saml 2.0 assertion', function () {
 
       assert.ok(profile);
       profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'].should.be.an.instanceOf(Array);
-      profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'].should.include('Admins');
-      profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'].should.include('Contributors');
+      profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'].should.containEql('Admins');
+      profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/groups'].should.containEql('Contributors');
       done();
     });
 
