@@ -136,6 +136,19 @@ passport.use('samlp-with-utf8', new Strategy(
   })
 );
 
+passport.use('samlp-with-inresponseto-validation', new Strategy(
+  {
+    path: '/callback/samlp-with-inresponseto-validation',
+    identityProviderUrl: identityProviderUrl,
+    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
+    validateInResponseTo: true,
+    checkAudience: false
+  },
+  function(profile, done) {
+    return done(null, profile);
+  })
+);
+
 
 var fakeUser = {
   id: '12345678',
@@ -200,6 +213,9 @@ module.exports.start = function(options, callback){
   app.get('/login-custom-request-template',
       passport.authenticate('samlp-custom-request-template', { protocol: 'samlp', RelayState: relayState }));
 
+  app.get('/login-with-inresponseto-validation',
+    passport.authenticate('samlp-with-inresponseto-validation', { protocol: 'samlp', RelayState: relayState }));
+
   app.post('/callback',
     function(req, res, next) {
       //console.log('req.body');
@@ -255,6 +271,13 @@ module.exports.start = function(options, callback){
 
   app.post('/callback/samlp-with-utf8',
     passport.authenticate('samlp-with-utf8', { protocol: 'samlp' }),
+    function(req, res) {
+      res.json(req.user);
+    }
+  );
+
+  app.post('/callback/samlp-with-inresponseto-validation',
+    passport.authenticate('samlp-with-inresponseto-validation', { protocol: 'samlp' }),
     function(req, res) {
       res.json(req.user);
     }
