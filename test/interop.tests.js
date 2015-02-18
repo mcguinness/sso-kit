@@ -190,6 +190,8 @@ describe('interop', function () {
     };
 
     var samlpOptions = {
+      checkInResponseTo: false,
+      checkDestination: false,
       protocolBinding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
     };
 

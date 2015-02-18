@@ -17,7 +17,9 @@ passport.use('samlp', new Strategy({
     path: '/callback',
     realm: 'https://auth0-dev-ed.my.salesforce.com',
     identityProviderUrl: identityProviderUrl,
-    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309'
+    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
+    checkInResponseTo: false,
+    checkDestination: false,
   }, function(profile, done) {
     return done(null, profile);
   })
@@ -28,6 +30,8 @@ passport.use('samlp-custom-request-template', new Strategy({
     realm: 'https://auth0-dev-ed.my.salesforce.com',
     identityProviderUrl: identityProviderUrl,
     thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
+    checkInResponseTo: false,
+    checkDestination: false,
     requestTemplate: '<AuthnRequest Issuertico="@@Issuer@@" Version="3.0" Protocol="@@ProtocolBinding@@" Foo="@@Foo.Test@@"></AuthnRequest>',
     requestContext: {
       Foo: {
@@ -44,7 +48,9 @@ passport.use('samlp-idpurl-with-querystring', new Strategy(
     path: '/callback',
     realm: 'https://auth0-dev-ed.my.salesforce.com',
     identityProviderUrl: identityProviderUrl + '?foo=bar',
-    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309'
+    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
+    checkInResponseTo: false,
+    checkDestination: false,
   },
   function(profile, done) {
     return done(null, profile);
@@ -56,7 +62,9 @@ passport.use('samlp-signedresponse', new Strategy(
     path: '/callback',
     realm: 'https://auth0-dev-ed.my.salesforce.com',
     identityProviderUrl: identityProviderUrl,
-    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309'
+    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
+    checkInResponseTo: false,
+    checkDestination: false,
   },
   function(profile, done) {
     return done(null, profile);
@@ -68,7 +76,9 @@ passport.use('samlp-signedresponse-invalidcert', new Strategy(
     path: '/callback',
     realm: 'urn:fixture-test',
     identityProviderUrl: identityProviderUrl,
-    thumbprint: '11111111111111111a5b93a43572eb2376fed309'
+    thumbprint: '11111111111111111a5b93a43572eb2376fed309',
+    checkInResponseTo: false,
+    checkDestination: false,
   },
   function(profile, done) {
     return done(null, profile);
@@ -80,7 +90,9 @@ passport.use('samlp-invalidcert', new Strategy(
     path: '/callback',
     realm: 'urn:fixture-test',
     identityProviderUrl: identityProviderUrl,
-    thumbprint: '11111111111111111a5b93a43572eb2376fed309'
+    thumbprint: '11111111111111111a5b93a43572eb2376fed309',
+    checkInResponseTo: false,
+    checkDestination: false,
   },
   function(profile, done) {
     return done(null, profile);
@@ -92,7 +104,10 @@ passport.use('samlp-signedresponse-signedassertion', new Strategy(
     path: '/callback',
     realm: 'urn:auth0:login-dev3',
     thumbprint: 'C9ED4DFB07CAF13FC21E0FEC1572047EB8A7A4CB',
-    checkExpiration: false // we are using a precomputed assertion generated from a sample idp feide
+    // we are using a precomputed assertion generated from a sample idp feide
+    checkInResponseTo: false,
+    checkDestination: false,
+    checkExpiration: false
   },
   function(profile, done) {
     return done(null, profile);
@@ -104,7 +119,10 @@ passport.use('samlp-ping', new Strategy(
     path: '/callback',
     realm: 'urn:auth0:login-dev3',
     thumbprint: '44340220770a348444be34970939cff8a2d74f08',
-    checkExpiration: false // we are using a precomputed assertion generated from a sample idp feide
+    // we are using a precomputed assertion generated from a sample idp feide
+    checkInResponseTo: false,
+    checkDestination: false,
+    checkExpiration: false
   },
   function(profile, done) {
     return done(null, profile);
@@ -116,7 +134,10 @@ passport.use('samlp-okta', new Strategy(
     path: '/callback',
     realm: 'https://auth0145.auth0.com',
     thumbprint: 'a0c7dbb790e3476d3c5dd236f9f2060b1fd6e253',
-    checkExpiration: false // we are using a precomputed assertion generated from a sample idp feide
+    // we are using a precomputed assertion generated from a sample idp feide
+    checkInResponseTo: false,
+    checkDestination: false,
+    checkExpiration: false
   },
   function(profile, done) {
     return done(null, profile);
@@ -128,7 +149,10 @@ passport.use('samlp-with-utf8', new Strategy(
     path: '/callback',
     thumbprint: '42FA24A83E107F6842E05D2A2CA0A0A0CA8A2031',
     decryptionKey: fs.readFileSync(path.join(__dirname, '../test-decryption.key')),
-    checkExpiration: false, // we are using a precomputed assertion generated from a sample idp feide
+    // we are using a precomputed assertion generated from a sample idp feide
+    checkInResponseTo: false,
+    checkDestination: false,
+    checkExpiration: false,
     checkAudience: false
   },
   function(profile, done) {
@@ -139,9 +163,11 @@ passport.use('samlp-with-utf8', new Strategy(
 passport.use('samlp-with-inresponseto-validation', new Strategy(
   {
     path: '/callback/samlp-with-inresponseto-validation',
+    realm: 'urn:test:sp',
     identityProviderUrl: identityProviderUrl,
     thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
-    validateInResponseTo: true,
+    checkInResponseTo: true,
+    checkDestination: false,
     checkAudience: false
   },
   function(profile, done) {
