@@ -25,24 +25,6 @@ passport.use('samlp', new Strategy({
   })
 );
 
-passport.use('samlp-custom-request-template', new Strategy({
-    path: '/callback',
-    realm: 'https://auth0-dev-ed.my.salesforce.com',
-    identityProviderUrl: identityProviderUrl,
-    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
-    checkInResponseTo: false,
-    checkDestination: false,
-    requestTemplate: '<AuthnRequest Issuertico="@@Issuer@@" Version="3.0" Protocol="@@ProtocolBinding@@" Foo="@@Foo.Test@@"></AuthnRequest>',
-    requestContext: {
-      Foo: {
-        Test: 123
-      }
-    }
-  }, function(profile, done) {
-    return done(null, profile);
-  })
-);
-
 passport.use('samlp-idpurl-with-querystring', new Strategy(
   {
     path: '/callback',
@@ -235,9 +217,6 @@ module.exports.start = function(options, callback){
 
   app.get('/login', passport.authenticate('samlp', { protocol: 'samlp', RelayState: relayState }));
   app.get('/login-idp-with-querystring', passport.authenticate('samlp-idpurl-with-querystring', { protocol: 'samlp', RelayState: relayState }));
-
-  app.get('/login-custom-request-template',
-      passport.authenticate('samlp-custom-request-template', { protocol: 'samlp', RelayState: relayState }));
 
   app.get('/login-with-inresponseto-validation',
     passport.authenticate('samlp-with-inresponseto-validation', { protocol: 'samlp', RelayState: relayState }));
