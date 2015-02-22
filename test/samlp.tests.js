@@ -8,6 +8,7 @@ var Assertion = require('../lib/passport-wsfed-saml2/saml');
 var Samlp = require('../lib/passport-wsfed-saml2/samlp');
 var fs = require('fs');
 var zlib = require('zlib');
+var url = require('url');
 
 describe('samlp (functional tests)', function () {
   before(function (done) {
@@ -24,7 +25,7 @@ describe('samlp (functional tests)', function () {
     before(function (done) {
       // this samlp request comes from Salesforce
       doSamlpFlow('http://localhost:5051/samlp?SAMLRequest=fZJbc6owFIX%2FCpN3EAEVMmIHEfDaqlCP%2BtKJELkUEkqCl%2F76Uj3O9JyHPmay9l4r%2BVb%2F6VLkwglXLKXEBG1JBgImIY1SEpvgNXBFHTwN%2BgwVeQmtmidkjT9qzLjQzBEGbxcmqCsCKWIpgwQVmEEeQt9azKEiybCsKKchzYFgMYYr3hjZlLC6wJWPq1Ma4tf13AQJ5yWDrVZO45RIDOWYHWkVYimkBRBGjWVKEL%2BlfEhDSjhlVEJNLvlb1%2FqOA4TJyARvynPH80qFFJPAdg%2Fh1fNnGVqpKO3OLkZonUfJ0Nu2Y2t6PdlVPj1RZxVlThywI8rihVH0MuksTQz3sx1Fm2xv5LO9nYSs5KXxfnm364%2FwfMDPWMqn182qHOqpjzR0dncsM6xO1Vs7h860HI97yrB7xHE9dt2loy%2FQu1prie%2FMcuNNL2i6nUdWp%2Fdnk3yekb7dXYhWjFjil%2Br2IC%2Bd%2FexlNF7wS77Zomvo7epFbCuyVx5tq3klYzWeEMYR4SZQ5LYqypqo6IGiQE2FmiKpencPhOXf%2Fx%2Bm5E71N1iHu4jBcRAsxeWLHwBh82hHIwD3LsCbefWjBL%2BvRQ%2FyYPCAd4MmRvgk4kgqrv8R77d%2B2Azup38LOPgC&RelayState=123',
-                  'http://localhost:5051/callback', function(err, resp) {
+                  'http://localhost:5051/callback/samlp-signedassertion', function(err, resp) {
         if (err) return done(err);
         if (resp.response.statusCode !== 200) return done(new Error(resp.body));
         r = resp.response;
@@ -227,7 +228,7 @@ describe('samlp (functional tests)', function () {
         });
     });
 
-    it('should validate Response InResponseTo matches AuthnRequest ID', function(){
+    it('should validate InResponseTo matches AuthnRequest ID', function(){
       expect(r.statusCode)
         .to.equal(200);
     })
@@ -243,7 +244,7 @@ describe('samlp (functional tests)', function () {
   });
 
 
-  describe('samlp flow with invalid Response InResponseTo', function () {
+  describe('samlp flow with invalid InResponseTo', function () {
     var r, bod;
 
     before(function (done) {
@@ -291,11 +292,14 @@ describe('samlp (functional tests)', function () {
       var querystring = qs.parse(r.headers.location.split('?')[1]);
       expect(querystring).to.have.property('SAMLRequest');
       var SAMLRequest = querystring.SAMLRequest;
-
       zlib.inflateRaw(new Buffer(SAMLRequest, 'base64'), function (err, buffer) {
         if (err) return done(err);
         var request = buffer.toString();
         var doc = new xmldom.DOMParser().parseFromString(request);
+        var iss = doc.documentElement.getElementsByTagName('saml:Issuer')[0];
+
+        expect(doc.documentElement.getAttribute('ID'))
+          .not.be.empty;
 
         expect(doc.documentElement.getAttribute('ProtocolBinding'))
           .to.equal('urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST');
@@ -303,9 +307,11 @@ describe('samlp (functional tests)', function () {
         expect(doc.documentElement.getAttribute('Version'))
           .to.equal('2.0');
 
-        expect(doc.documentElement.getElementsByTagName('saml:Issuer')[0]
-                                  .getAttribute('xmlns:saml'))
+        expect(iss.getAttribute('xmlns:saml'))
           .to.equal('urn:oasis:names:tc:SAML:2.0:assertion');
+
+        expect(iss.textContent)
+          .to.equal('urn:fixture:sp');
 
         done();
       });
@@ -351,6 +357,43 @@ describe('samlp (functional tests)', function () {
       expect(querystring).to.have.property('foo');
     });
 
+  });
+
+  describe('samlp signed request', function () {
+    var r, bod;
+
+    before(function (done) {
+      request.get({
+        jar: request.jar(),
+        followRedirect: false,
+        uri: 'http://localhost:5051/login-with-signed-request'
+      }, function (err, resp, b){
+        if(err) return callback(err);
+        r = resp;
+        bod = b;
+        done();
+      });
+    });
+
+    it('should redirect to idp', function(){
+      expect(r.statusCode)
+            .to.equal(302);
+    });
+
+    it('should have valid signature', function(){
+      var requestUrl = url.parse(r.headers.location, true);
+
+      expect(requestUrl.query).to.have.property('SAMLRequest');
+      expect(requestUrl.query).to.have.property('SigAlg');
+      expect(requestUrl.query.SigAlg).to.equal('http://www.w3.org/2001/04/xmldsig-more#rsa-sha256')
+      expect(requestUrl.query).to.have.property('Signature');
+
+      var samlp = new Samlp({
+        cert: server.credentials.cert
+      });
+
+      expect(samlp.validateUrlSignature(r.headers.location)).to.be.true;
+    });
   });
 
 });
