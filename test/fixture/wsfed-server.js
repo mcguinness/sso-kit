@@ -8,7 +8,7 @@ var fs = require('fs');
 var path = require('path');
 
 var passport = require('passport');
-var Strategy = require('../../lib/passport-wsfed-saml2').Strategy;
+var Strategy = require('../../lib/passport-wsfed-saml2/strategy').WsFed;
 
 passport.use(new Strategy(
   {
@@ -86,7 +86,7 @@ module.exports.start = function(options, callback){
   }, options)));
 
   app.post('/callback', 
-    passport.authenticate('wsfed-saml2'),
+    passport.authenticate('wsfed'),
     function(req, res) {
       res.json(req.user);
     });
