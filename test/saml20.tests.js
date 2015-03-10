@@ -4,15 +4,12 @@ var assert = require('assert'),
     moment = require('moment'),
     should = require('should'),
     saml20 = require('saml').Saml20,
-    SamlPassport = require('../lib/passport-wsfed-saml2/saml').SAML;
+    Assertion = require('../lib/sso-kit/assertion');
 
 describe('saml 2.0 assertion', function () {
-  // cert created with:
-  // openssl req -x509 -new -newkey rsa:2048 -nodes -subj '/CN=auth0.auth0.com/O=Auth0 LLC/C=US/ST=Washington/L=Redmond' -keyout auth0.key -out auth0.pem
-
   var options = {
-    cert: fs.readFileSync(__dirname + '/test-auth0.pem'),
-    key: fs.readFileSync(__dirname + '/test-auth0.key'),
+    cert: fs.readFileSync(__dirname + '/test-idp.pem'),
+    key: fs.readFileSync(__dirname + '/test-idp.key'),
     issuer: 'urn:issuer',
     lifetimeInSeconds: 600,
     audiences: 'urn:myapp',
@@ -28,8 +25,8 @@ describe('saml 2.0 assertion', function () {
 
     var signedAssertion = saml20.create(options);
 
-    var publicKey = fs.readFileSync(__dirname + '/test-auth0.cer').toString();
-    var saml_passport = new SamlPassport({cert: publicKey, realm: 'urn:myapp'});
+    var publicKey = fs.readFileSync(__dirname + '/test-idp.cer').toString();
+    var saml_passport = new Assertion({cert: publicKey, audience: 'urn:myapp'});
     var profile = saml_passport.validateSamlAssertion(signedAssertion, function(err, profile) {
       if (err) return done(err);
 
@@ -51,8 +48,8 @@ describe('saml 2.0 assertion', function () {
     };
 
     var signedAssertion = saml20.create(options);
-    var publicKey = fs.readFileSync(__dirname + '/test-auth0.cer').toString();
-    var saml_passport = new SamlPassport({cert: publicKey, realm: 'urn:myapp'});
+    var publicKey = fs.readFileSync(__dirname + '/test-idp.cer').toString();
+    var saml_passport = new Assertion({cert: publicKey, audience: 'urn:myapp'});
     var profile = saml_passport.validateSamlAssertion(signedAssertion, function(err, profile) {
       if (err) return done(err);
 
@@ -70,8 +67,8 @@ describe('saml 2.0 assertion', function () {
     options.lifetimeInSeconds = -10000;
 
     var signedAssertion = saml20.create(options);
-    var publicKey = fs.readFileSync(__dirname + '/test-auth0.cer').toString();
-    var saml_passport = new SamlPassport({cert: publicKey, realm: 'urn:myapp'});
+    var publicKey = fs.readFileSync(__dirname + '/test-idp.cer').toString();
+    var saml_passport = new Assertion({cert: publicKey, audience: 'urn:myapp'});
     var profile = saml_passport.validateSamlAssertion(signedAssertion, function(err, profile) {
       should.exists(err);
       err.message.should.equal('assertion has expired.');
@@ -85,8 +82,8 @@ describe('saml 2.0 assertion', function () {
   it('should extract authentication context from assertion as a user prop', function (done) {
 
     var options = {
-      cert: fs.readFileSync(__dirname + '/test-auth0.pem'),
-      key: fs.readFileSync(__dirname + '/test-auth0.key'),
+      cert: fs.readFileSync(__dirname + '/test-idp.pem'),
+      key: fs.readFileSync(__dirname + '/test-idp.key'),
       issuer: 'urn:issuer',
       lifetimeInSeconds: 600,
       audiences: 'urn:myapp',
@@ -100,8 +97,8 @@ describe('saml 2.0 assertion', function () {
 
     var signedAssertion = saml20.create(options);
 
-    var publicKey = fs.readFileSync(__dirname + '/test-auth0.cer').toString();
-    var saml_passport = new SamlPassport({cert: publicKey, realm: 'urn:myapp'});
+    var publicKey = fs.readFileSync(__dirname + '/test-idp.cer').toString();
+    var saml_passport = new Assertion({cert: publicKey, audience: 'urn:myapp'});
     var profile = saml_passport.validateSamlAssertion(signedAssertion, function(error, profile) {
       if (error) return done(error);
       

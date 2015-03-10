@@ -1,7 +1,7 @@
 var express = require('express')
   , passport = require('passport')
   , util = require('util')
-  , wsfedsaml2 = require('../../lib/passport-wsfed-saml2/index').Strategy
+  , wsfedsaml2 = require('../../lib/sso-kit/index').Strategy
   , fs = require('fs');
 
 var users = [

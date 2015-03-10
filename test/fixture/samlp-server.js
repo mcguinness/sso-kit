@@ -7,7 +7,7 @@ var xtend = require('xtend');
 var fs = require('fs');
 var path = require('path');
 var passport = require('passport');
-var Strategy = require('../../lib/passport-wsfed-saml2').Strategy.Samlp;
+var SamlpStrategy = require('../../lib/sso-kit').Strategy.Samlp;
 
 /**
  * Globals
@@ -18,7 +18,7 @@ var relayState = '/deep/link/state';
 
 var defaultOptions = {
     path: '/callback',
-    realm: 'urn:fixture:sp',
+    audience: 'urn:fixture:sp',
     issuer: 'urn:fixture:idp',
     idpSsoUrl: idpSsoUrl,
     thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
@@ -54,38 +54,38 @@ var verifyProfile = function(profile, response, done) {
  * Passport Fixture Setup
  */
 
-passport.use('samlp', new Strategy(defaultOptions, verifyProfile)
+passport.use('samlp', new SamlpStrategy(defaultOptions, verifyProfile)
 );
 
-passport.use('samlp-idpurl-with-querystring', new Strategy(xtend(defaultOptions, {
-    realm: 'https://auth0-dev-ed.my.salesforce.com',
+passport.use('samlp-idpurl-with-querystring', new SamlpStrategy(xtend(defaultOptions, {
+    audience: 'https://auth0-dev-ed.my.salesforce.com',
     idpSsoUrl: idpSsoUrl + '?foo=bar'
   }), verifyProfile)
 );
 
-passport.use('samlp-signedassertion', new Strategy(xtend(defaultOptions, {
-    realm: 'https://auth0-dev-ed.my.salesforce.com',
+passport.use('samlp-signedassertion', new SamlpStrategy(xtend(defaultOptions, {
+    audience: 'https://auth0-dev-ed.my.salesforce.com',
     requireResponseSignature: false
   }), verifyProfile)
 );
 
-passport.use('samlp-signedresponse', new Strategy(xtend(defaultOptions, {
-    realm: 'https://auth0-dev-ed.my.salesforce.com'
+passport.use('samlp-signedresponse', new SamlpStrategy(xtend(defaultOptions, {
+    audience: 'https://auth0-dev-ed.my.salesforce.com'
   }), verifyProfile)
 );
 
-passport.use('samlp-signedresponse-invalidcert', new Strategy(xtend(defaultOptions, {
+passport.use('samlp-signedresponse-invalidcert', new SamlpStrategy(xtend(defaultOptions, {
     thumbprint: '11111111111111111a5b93a43572eb2376fed309'
   }), verifyProfile)
 );
 
-passport.use('samlp-invalidcert', new Strategy(xtend(defaultOptions, {
+passport.use('samlp-invalidcert', new SamlpStrategy(xtend(defaultOptions, {
     thumbprint: '11111111111111111a5b93a43572eb2376fed309'
   }), verifyProfile)
 );
 
-passport.use('samlp-signedresponse-signedassertion', new Strategy(xtend(defaultOptions, {
-    realm: 'urn:auth0:login-dev3',
+passport.use('samlp-signedresponse-signedassertion', new SamlpStrategy(xtend(defaultOptions, {
+    audience: 'urn:auth0:login-dev3',
     issuer: 'https://openidp.feide.no',
     // we are using a precomputed assertion generated from a sample idp feide
     thumbprint: 'C9ED4DFB07CAF13FC21E0FEC1572047EB8A7A4CB',
@@ -93,8 +93,20 @@ passport.use('samlp-signedresponse-signedassertion', new Strategy(xtend(defaultO
   }), verifyProfile)
 );
 
-passport.use('samlp-ping', new Strategy(xtend(defaultOptions, {
-    realm: 'urn:auth0:login-dev3',
+passport.use('samlp-adfs', new SamlpStrategy(xtend(defaultOptions, {
+  audience: 'urn:example:sp',
+  acsUrl: "https://localhost:5051/callback",
+  issuer: 'http://kdc.corp.example.com/adfs/services/trust',
+  thumbprint: 'F127098178127B5B5EB051CD54F7E0C2E5038D65',
+  requireResponseSignature: false,
+  checkInResponseTo: false,
+  checkDestination: true,
+  checkExpiration: false
+  }), verifyProfile)
+);
+
+passport.use('samlp-ping', new SamlpStrategy(xtend(defaultOptions, {
+    audience: 'urn:auth0:login-dev3',
     // we are using a precomputed assertion generated from a sample idp feide
     thumbprint: '44340220770a348444be34970939cff8a2d74f08',
     issuer: 'PingConnect',
@@ -103,8 +115,8 @@ passport.use('samlp-ping', new Strategy(xtend(defaultOptions, {
   }), verifyProfile)
 );
 
-passport.use('samlp-okta', new Strategy(xtend(defaultOptions, {
-    realm: 'https://auth0145.auth0.com',
+passport.use('samlp-okta', new SamlpStrategy(xtend(defaultOptions, {
+    audience: 'https://auth0145.auth0.com',
     // we are using a precomputed assertion generated from a sample idp feide
     thumbprint: 'a0c7dbb790e3476d3c5dd236f9f2060b1fd6e253',
     issuer: 'http://www.okta.com/k7xkhq0jUHUPQAXVMUAN',
@@ -113,7 +125,7 @@ passport.use('samlp-okta', new Strategy(xtend(defaultOptions, {
   }), verifyProfile)
 );
 
-passport.use('samlp-with-utf8', new Strategy(xtend(defaultOptions, {
+passport.use('samlp-with-utf8', new SamlpStrategy(xtend(defaultOptions, {
     // we are using a precomputed assertion generated from a sample idp feide
     issuer: 'https://aai-logon.ethz.ch/idp/shibboleth',
     thumbprint: '42FA24A83E107F6842E05D2A2CA0A0A0CA8A2031',
@@ -124,18 +136,18 @@ passport.use('samlp-with-utf8', new Strategy(xtend(defaultOptions, {
   }), verifyProfile)
 );
 
-passport.use('samlp-with-inresponseto-validation', new Strategy(xtend(defaultOptions, {
+passport.use('samlp-with-inresponseto-validation', new SamlpStrategy(xtend(defaultOptions, {
     checkInResponseTo: true
   }), verifyProfile)
 );
 
-passport.use('samlp-signed-request', new Strategy(xtend(defaultOptions, {
+passport.use('samlp-signed-request', new SamlpStrategy(xtend(defaultOptions, {
     signRequest: true,
     signatureKey: credentials.key
   }), verifyProfile)
 );
 
-passport.use('samlp-slo', new Strategy(xtend(defaultOptions, {
+passport.use('samlp-slo', new SamlpStrategy(xtend(defaultOptions, {
     signRequest: true,
     signatureKey: credentials.key
   }), verifyProfile)
@@ -232,6 +244,13 @@ module.exports.start = function(options, callback){
 
   app.post('/callback/samlp-signedresponse-signedassertion',
     passport.authenticate('samlp-signedresponse-signedassertion'),
+    function(req, res) {
+      res.json(req.user);
+    }
+  );
+
+  app.post('/callback/samlp-adfs',
+    passport.authenticate('samlp-adfs'),
     function(req, res) {
       res.json(req.user);
     }

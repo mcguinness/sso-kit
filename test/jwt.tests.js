@@ -1,11 +1,11 @@
 var expect = require('chai').expect;
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
-var Strategy = require('../lib/passport-wsfed-saml2/strategy').WsFed;
+var Strategy = require('../lib/sso-kit/strategy').WsFed;
 
 var cert = {
-  pub: fs.readFileSync(__dirname + '/test-auth0.pem'),
-  key: fs.readFileSync(__dirname + '/test-auth0.key')
+  pub: fs.readFileSync(__dirname + '/test-idp.pem'),
+  key: fs.readFileSync(__dirname + '/test-idp.key')
 };
 
 var s = new Strategy({

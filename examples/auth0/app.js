@@ -1,6 +1,6 @@
 var express = require('express');
 var passport = require('passport');
-var Strategy = require('../../lib/passport-wsfed-saml2/index').Strategy;
+var Strategy = require('../../lib/sso-kit/index').Strategy;
 var http = require('http');
 
 passport.serializeUser(function(user, done) {

@@ -8,9 +8,9 @@ var fs = require('fs');
 var path = require('path');
 
 var passport = require('passport');
-var Strategy = require('../../lib/passport-wsfed-saml2/strategy').WsFed;
+var WsFedStrategy = require('../../lib/sso-kit/strategy').WsFed;
 
-passport.use(new Strategy(
+passport.use(new WsFedStrategy(
   {
     path: '/callback',
     realm: 'urn:fixture-test',

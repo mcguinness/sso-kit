@@ -4,11 +4,12 @@ var request = require('request');
 var qs = require('querystring');
 var cheerio = require('cheerio');
 var xmldom = require('xmldom');
-var Assertion = require('../lib/passport-wsfed-saml2/saml');
-var Samlp = require('../lib/passport-wsfed-saml2/samlp');
+var Assertion = require('../lib/sso-kit/assertion');
+var Samlp = require('../lib/sso-kit/samlp');
 var fs = require('fs');
 var zlib = require('zlib');
 var url = require('url');
+var xtend = require('xtend');
 
 describe('samlp (functional tests)', function () {
   before(function (done) {
@@ -400,18 +401,91 @@ describe('samlp (functional tests)', function () {
 
 describe('samlp (unit tests)', function () {
 
-  describe('validateResponse', function() {
-    var samlpResponse = '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" ID="_0d2a510bffbb012bbc30" InResponseTo="_2N5GGp2nmITCFbcyGSKjaQ3ai6Kx9cAwDhBGX1gAJyvCrlJvoEQdjEgTsfajgM9m7j.w.I9Fz1ddVjZ9lKZChcsptp9kxkCuqcwbeNe.lJyVQpB8iSa4awFYsj9A5r7REb5JpHH72B6feguHFFPE8Mak3u4hSEKl9_8moiXLdA57WVhzwa8XYxn4mDshSp3Xb0PEZKODHMtxlVXaycGYuMgC20GpfCA" Version="2.0" IssueInstant="2014-02-25T15:20:20Z" Destination="https://auth0-dev-ed.my.salesforce.com"><saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">urn:fixture-test</saml:Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/></samlp:Status><saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" Version="2.0" ID="_241siKCvX3e3oRGYtkdcV4DfGDtIsVk4" IssueInstant="2014-02-25T15:20:20.535Z"><saml:Issuer>urn:fixture-test</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">12345678</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData NotOnOrAfter="2014-02-25T16:20:20.535Z" InResponseTo="_2N5GGp2nmITCFbcyGSKjaQ3ai6Kx9cAwDhBGX1gAJyvCrlJvoEQdjEgTsfajgM9m7j.w.I9Fz1ddVjZ9lKZChcsptp9kxkCuqcwbeNe.lJyVQpB8iSa4awFYsj9A5r7REb5JpHH72B6feguHFFPE8Mak3u4hSEKl9_8moiXLdA57WVhzwa8XYxn4mDshSp3Xb0PEZKODHMtxlVXaycGYuMgC20GpfCA"/></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="2014-02-25T15:20:20.535Z" NotOnOrAfter="2014-02-25T16:20:20.535Z"><saml:AudienceRestriction><saml:Audience>https://auth0-dev-ed.my.salesforce.com</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AttributeStatement xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"><saml:AttributeValue xsi:type="xs:anyType">12345678</saml:AttributeValue></saml:Attribute><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"><saml:AttributeValue xsi:type="xs:anyType">jfoo@gmail.com</saml:AttributeValue></saml:Attribute><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"><saml:AttributeValue xsi:type="xs:anyType">John Foo</saml:AttributeValue></saml:Attribute><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"><saml:AttributeValue xsi:type="xs:anyType">John</saml:AttributeValue></saml:Attribute><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"><saml:AttributeValue xsi:type="xs:anyType">Foo</saml:AttributeValue></saml:Attribute></saml:AttributeStatement><saml:AuthnStatement AuthnInstant="2014-02-25T15:20:20.535Z"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><Reference URI="#_0d2a510bffbb012bbc30"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>YkV3DdlEa19Gb0eE3jTYTVPalV1kZ88fbIv4blO9T1Y=</DigestValue></Reference></SignedInfo><SignatureValue>ZiINpNlahQlp1JbgFsamI1/pZ+zcPsZboESVayxBMtrUBYNC4IG2VBnqku7paDxJQ7624CvcNzAYWYCv/2/c67Bv6YhQwK1rb4DPEL6OvbI8FNkYAhTNNw5UhUTEMjnJ7AncV/svUTYyIOyktuCvQh3tR4teZJV+BM3IKj9vRQQbCRNSUVHJEe963ma5HcCyo+RhIKU1pm4+ycswOlY9F115roKB4RNRJLs7Z5fyzhbOoCUujR9MMKHHq+CWaYvh5SkjaH1wMorlPlJtq5dhTZtDRhj4HwxYpCG5b4NF2vp+Jpni4dDFKou0Lzk0k6ueCJGcNHfidfEB3RB20Hed2g==</SignatureValue><KeyInfo><X509Data><X509Certificate>MIIEDzCCAvegAwIBAgIJALr9HwgrQ7GeMA0GCSqGSIb3DQEBBQUAMGIxGDAWBgNVBAMTD2F1dGgwLmF1dGgwLmNvbTESMBAGA1UEChMJQXV0aDAgTExDMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDAeFw0xMjEyMjkxNTMwNDdaFw0xMzAxMjgxNTMwNDdaMGIxGDAWBgNVBAMTD2F1dGgwLmF1dGgwLmNvbTESMBAGA1UEChMJQXV0aDAgTExDMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMZiVmNHiXLldrgbS50ONNOH7pJ2zg6OcSMkYZGDZJbOZ/TqwauC6JOnI7+xtkPJsQHZSFJs4U0srjZKzDCmaz2jLAJDShP2jaXlrki16nDLPE//IGAg3BJguSmBCWpDbSm92V9hSsE+Mhx6bDaJiw8yQ+Q8iSm0aTQZtp6O4ICMu00ESdh9NJqIECELvP31ADV1Xhj7IbyyVPDFxMv3ol5BySE9wwwOFUq/wv7Xz9LRiUjUzPO+Lq3OM3o/uCDbk7jD7XrGUuOydALD8ULsXp4EuDO+nFbeXB/iKndZynuVKokirywl2nD2IP0/yncdLQZ8ByIyqP3G82fq/l8p7AsCAwEAAaOBxzCBxDAdBgNVHQ4EFgQUHI2rUXeBjTv1zAllaPGrHFcEK0YwgZQGA1UdIwSBjDCBiYAUHI2rUXeBjTv1zAllaPGrHFcEK0ahZqRkMGIxGDAWBgNVBAMTD2F1dGgwLmF1dGgwLmNvbTESMBAGA1UEChMJQXV0aDAgTExDMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZIIJALr9HwgrQ7GeMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEFBQADggEBAFrXIhCy4T4eGrikb0R2wHv/uS548r3pZyBV0CDbcRwAtbnpJMvkGFqKVp4pmyoIDSVNK/j+sLEshB20XftezHZyRJbCUbtKvXQ6FsxoeZMlN0ITYKTaoBZKhUxxj90otAhNC58qwGUPqt2LewJhHyLucKkGJ1mQ3b5xKZ532ToufouH9VLhig3H1KnxWo/zMD6Ke8cCk6qO9htuhI06s3GQGS1QWQtAmm17C6TfKgDwQFZwhqHUUZnwKRH8gU6OgZsvhgV1B7H5mjZcu57KMiDBekU9MEY0DCVTN3WkmcTII668zLsJrkNX6PEfck1AMBbVE6pEUKcWwq3uaLvlAUo=</X509Certificate></X509Data></KeyInfo></Signature></samlp:Response>';
+  // <samlp:Response ID="_f3c2896c-cc93-4316-9934-6643b6606e3e" Version="2.0" IssueInstant="2015-03-09T18:54:18.553Z" Destination="https://localhost:5051/callback" Consent="urn:oasis:names:tc:SAML:2.0:consent:unspecified" xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"><Issuer xmlns="urn:oasis:names:tc:SAML:2.0:assertion">http://kdc.corp.example.com/adfs/services/trust</Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></samlp:Status><Assertion ID="_4f780ad0-1787-49f7-8ff2-35f90325f056" IssueInstant="2015-03-09T18:54:18.548Z" Version="2.0" xmlns="urn:oasis:names:tc:SAML:2.0:assertion"><Issuer>http://kdc.corp.example.com/adfs/services/trust</Issuer><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><ds:Reference URI="#_4f780ad0-1787-49f7-8ff2-35f90325f056"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue>cF1i7FEmHVKBd0S6qeIN1D1vmtg=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>QqzRs8pU1hE0ENEHOs35YsyavShXJ6en5MEUM6akegT2P9vUlRWudI6fydcfhe1V3TS7yVT+S4JHhXMq2iQEHnXg/S/ypkttHMV/bcq+mq6yNoG8jtFYAVUv9OyuZ9+mvu1FNJ800pnkqKm8c1j+LtkZ0z/Wt4uueOnol5U8j7mzUdmXnzUCzyadA4e7NM3fcErCzarj+1GF49To42tDW7vKDUsSVszhaAWPwC/+5z8inLAvyTJIkP2TTOcOKaROhf/l6e371LExgPAeIvH9QAg2qZSsRgIslRK/NrfiOt3GU08xDjmNpP7SxvxAF4jYmP+xju4t23tli9Tq3EDq+w==</ds:SignatureValue><KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><ds:X509Data><ds:X509Certificate>MIIC5DCCAcygAwIBAgIQSYZX+xYQt4ZIoG65Dp507DANBgkqhkiG9w0BAQsFADAuMSwwKgYDVQQDEyNBREZTIFNpZ25pbmcgLSBrZGMuY29ycC5leGFtcGxlLmNvbTAeFw0xNDExMDIwMjUzMjdaFw0xNTExMDIwMjUzMjdaMC4xLDAqBgNVBAMTI0FERlMgU2lnbmluZyAtIGtkYy5jb3JwLmV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqchcci+rDephSlH/O+t4WWWwVKQNzwkg5GdFtLAX+wUJg0R83TlNdm3WglMH1pMfc/2FKMPIR7bjNtb60j0OVSPI+DNTYiSHp60v4c9jZPo2NM4PkA/SvMqiSBmHvgrSVNw4eYRHwp0WA4XgYYtyOG9Dmc6GN+n+BbGUeSaNWIWITYjGm7RIlpI4IpDCKM83VJDECJbFagaIszOOJcbYS0SLgvZQEb8jtohVTBgx0YMcUq2fTwKMFBfvGab/j6CIe/LWI/5qMo0iNPDG1f/mQ18oyW52Uabhe8ng4ljdEztkHPIxrlLDlCRABqDwqPsokGVlqjBrMR39oeMznWDX0QIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQA41suucsigshHcZbn+sK+gyseSh/m2v2tqgL1ux8eUMR3pWIGnfCE2u/DmebgoryFJfW9jGvP1K4Cz4tx/WeVidvVvLceJMgOgMKtugRU9dmAzKU8IIw8uCN61VBfQ9DsB9jL/txOTTu8by72HNlBN2Jsu8LhMULMnBNyETcBCtXoXlBpFgR6AxUBFCn3QylFgBEgqXlDuTBEE6iHlW3zsyJXQ4sGP6hNMNNmLMaazbaHRX9zISMrhrQeuUr4CIv1cjnkQmXwpHJzozDhlu/vEvcHHPCXIkBMY38ENjzBQgnapp++Ad3NSQS+TNw7vDG0VJ+G/fHkRwiYihnqSJ1lz</ds:X509Certificate></ds:X509Data></KeyInfo></ds:Signature><Subject><NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">saml.jackson@example.com</NameID><SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><SubjectConfirmationData NotOnOrAfter="2015-03-09T18:59:18.553Z" Recipient="https://localhost:5051/callback" /></SubjectConfirmation></Subject><Conditions NotBefore="2015-03-09T18:54:18.539Z" NotOnOrAfter="2015-03-09T19:54:18.539Z"><AudienceRestriction><Audience>urn:example:sp</Audience></AudienceRestriction></Conditions><AttributeStatement><Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"><AttributeValue>saml.jackson@example.com</AttributeValue></Attribute><Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"><AttributeValue>Saml Jackson</AttributeValue></Attribute><Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"><AttributeValue>Saml</AttributeValue></Attribute><Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"><AttributeValue>Jackson</AttributeValue></Attribute><Attribute Name="email"><AttributeValue>saml.jackson@example.com</AttributeValue></Attribute><Attribute Name="displayName"><AttributeValue>Saml Jackson</AttributeValue><AttributeValue>CORP\saml</AttributeValue></Attribute><Attribute Name="firstName"><AttributeValue>Saml</AttributeValue></Attribute><Attribute Name="lastName"><AttributeValue>Jackson</AttributeValue></Attribute></AttributeStatement><AuthnStatement AuthnInstant="2015-03-09T18:54:18.299Z" SessionIndex="_4f780ad0-1787-49f7-8ff2-35f90325f056"><AuthnContext><AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</AuthnContextClassRef></AuthnContext></AuthnStatement></Assertion></samlp:Response>
+  var samlpResponse = new Buffer('PHNhbWxwOlJlc3BvbnNlIElEPSJfZjNjMjg5NmMtY2M5My00MzE2LTk5MzQtNjY0M2I2NjA2ZTNlIiBWZXJzaW9uPSIyLjAiIElzc3VlSW5zdGFudD0iMjAxNS0wMy0wOVQxODo1NDoxOC41NTNaIiBEZXN0aW5hdGlvbj0iaHR0cHM6Ly9sb2NhbGhvc3Q6NTA1MS9jYWxsYmFjayIgQ29uc2VudD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmNvbnNlbnQ6dW5zcGVjaWZpZWQiIHhtbG5zOnNhbWxwPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6cHJvdG9jb2wiPjxJc3N1ZXIgeG1sbnM9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphc3NlcnRpb24iPmh0dHA6Ly9rZGMuY29ycC5leGFtcGxlLmNvbS9hZGZzL3NlcnZpY2VzL3RydXN0PC9Jc3N1ZXI+PHNhbWxwOlN0YXR1cz48c2FtbHA6U3RhdHVzQ29kZSBWYWx1ZT0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnN0YXR1czpTdWNjZXNzIiAvPjwvc2FtbHA6U3RhdHVzPjxBc3NlcnRpb24gSUQ9Il80Zjc4MGFkMC0xNzg3LTQ5ZjctOGZmMi0zNWY5MDMyNWYwNTYiIElzc3VlSW5zdGFudD0iMjAxNS0wMy0wOVQxODo1NDoxOC41NDhaIiBWZXJzaW9uPSIyLjAiIHhtbG5zPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIj48SXNzdWVyPmh0dHA6Ly9rZGMuY29ycC5leGFtcGxlLmNvbS9hZGZzL3NlcnZpY2VzL3RydXN0PC9Jc3N1ZXI+PGRzOlNpZ25hdHVyZSB4bWxuczpkcz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI+PGRzOlNpZ25lZEluZm8+PGRzOkNhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiIC8+PGRzOlNpZ25hdHVyZU1ldGhvZCBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyNyc2Etc2hhMSIgLz48ZHM6UmVmZXJlbmNlIFVSST0iI180Zjc4MGFkMC0xNzg3LTQ5ZjctOGZmMi0zNWY5MDMyNWYwNTYiPjxkczpUcmFuc2Zvcm1zPjxkczpUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjZW52ZWxvcGVkLXNpZ25hdHVyZSIgLz48ZHM6VHJhbnNmb3JtIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8xMC94bWwtZXhjLWMxNG4jIiAvPjwvZHM6VHJhbnNmb3Jtcz48ZHM6RGlnZXN0TWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnI3NoYTEiIC8+PGRzOkRpZ2VzdFZhbHVlPmNGMWk3RkVtSFZLQmQwUzZxZUlOMUQxdm10Zz08L2RzOkRpZ2VzdFZhbHVlPjwvZHM6UmVmZXJlbmNlPjwvZHM6U2lnbmVkSW5mbz48ZHM6U2lnbmF0dXJlVmFsdWU+UXF6UnM4cFUxaEUwRU5FSE9zMzVZc3lhdlNoWEo2ZW41TUVVTTZha2VnVDJQOXZVbFJXdWRJNmZ5ZGNmaGUxVjNUUzd5VlQrUzRKSGhYTXEyaVFFSG5YZy9TL3lwa3R0SE1WL2JjcSttcTZ5Tm9HOGp0RllBVlV2OU95dVo5K212dTFGTko4MDBwbmtxS204YzFqK0x0a1owei9XdDR1dWVPbm9sNVU4ajdtelVkbVhuelVDenlhZEE0ZTdOTTNmY0VyQ3phcmorMUdGNDlUbzQydERXN3ZLRFVzU1ZzemhhQVdQd0MvKzV6OGluTEF2eVRKSWtQMlRUT2NPS2FST2hmL2w2ZTM3MUxFeGdQQWVJdkg5UUFnMnFaU3NSZ0lzbFJLL05yZmlPdDNHVTA4eERqbU5wUDdTeHZ4QUY0alltUCt4anU0dDIzdGxpOVRxM0VEcSt3PT08L2RzOlNpZ25hdHVyZVZhbHVlPjxLZXlJbmZvIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjIj48ZHM6WDUwOURhdGE+PGRzOlg1MDlDZXJ0aWZpY2F0ZT5NSUlDNURDQ0FjeWdBd0lCQWdJUVNZWlgreFlRdDRaSW9HNjVEcDUwN0RBTkJna3Foa2lHOXcwQkFRc0ZBREF1TVN3d0tnWURWUVFERXlOQlJFWlRJRk5wWjI1cGJtY2dMU0JyWkdNdVkyOXljQzVsZUdGdGNHeGxMbU52YlRBZUZ3MHhOREV4TURJd01qVXpNamRhRncweE5URXhNREl3TWpVek1qZGFNQzR4TERBcUJnTlZCQU1USTBGRVJsTWdVMmxuYm1sdVp5QXRJR3RrWXk1amIzSndMbVY0WVcxd2JHVXVZMjl0TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFxY2hjY2krckRlcGhTbEgvTyt0NFdXV3dWS1FOendrZzVHZEZ0TEFYK3dVSmcwUjgzVGxOZG0zV2dsTUgxcE1mYy8yRktNUElSN2JqTnRiNjBqME9WU1BJK0ROVFlpU0hwNjB2NGM5alpQbzJOTTRQa0EvU3ZNcWlTQm1IdmdyU1ZOdzRlWVJId3AwV0E0WGdZWXR5T0c5RG1jNkdOK24rQmJHVWVTYU5XSVdJVFlqR203UklscEk0SXBEQ0tNODNWSkRFQ0piRmFnYUlzek9PSmNiWVMwU0xndlpRRWI4anRvaFZUQmd4MFlNY1VxMmZUd0tNRkJmdkdhYi9qNkNJZS9MV0kvNXFNbzBpTlBERzFmL21RMThveVc1MlVhYmhlOG5nNGxqZEV6dGtIUEl4cmxMRGxDUkFCcUR3cVBzb2tHVmxxakJyTVIzOW9lTXpuV0RYMFFJREFRQUJNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUE0MXN1dWNzaWdzaEhjWmJuK3NLK2d5c2VTaC9tMnYydHFnTDF1eDhlVU1SM3BXSUduZkNFMnUvRG1lYmdvcnlGSmZXOWpHdlAxSzRDejR0eC9XZVZpZHZWdkxjZUpNZ09nTUt0dWdSVTlkbUF6S1U4SUl3OHVDTjYxVkJmUTlEc0I5akwvdHhPVFR1OGJ5NzJITmxCTjJKc3U4TGhNVUxNbkJOeUVUY0JDdFhvWGxCcEZnUjZBeFVCRkNuM1F5bEZnQkVncVhsRHVUQkVFNmlIbFczenN5SlhRNHNHUDZoTk1OTm1MTWFhemJhSFJYOXpJU01yaHJRZXVVcjRDSXYxY2pua1FtWHdwSEp6b3pEaGx1L3ZFdmNISFBDWElrQk1ZMzhFTmp6QlFnbmFwcCsrQWQzTlNRUytUTnc3dkRHMFZKK0cvZkhrUndpWWlobnFTSjFsejwvZHM6WDUwOUNlcnRpZmljYXRlPjwvZHM6WDUwOURhdGE+PC9LZXlJbmZvPjwvZHM6U2lnbmF0dXJlPjxTdWJqZWN0PjxOYW1lSUQgRm9ybWF0PSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoxLjE6bmFtZWlkLWZvcm1hdDplbWFpbEFkZHJlc3MiPnNhbWwuamFja3NvbkBleGFtcGxlLmNvbTwvTmFtZUlEPjxTdWJqZWN0Q29uZmlybWF0aW9uIE1ldGhvZD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOmNtOmJlYXJlciI+PFN1YmplY3RDb25maXJtYXRpb25EYXRhIE5vdE9uT3JBZnRlcj0iMjAxNS0wMy0wOVQxODo1OToxOC41NTNaIiBSZWNpcGllbnQ9Imh0dHBzOi8vbG9jYWxob3N0OjUwNTEvY2FsbGJhY2siIC8+PC9TdWJqZWN0Q29uZmlybWF0aW9uPjwvU3ViamVjdD48Q29uZGl0aW9ucyBOb3RCZWZvcmU9IjIwMTUtMDMtMDlUMTg6NTQ6MTguNTM5WiIgTm90T25PckFmdGVyPSIyMDE1LTAzLTA5VDE5OjU0OjE4LjUzOVoiPjxBdWRpZW5jZVJlc3RyaWN0aW9uPjxBdWRpZW5jZT51cm46ZXhhbXBsZTpzcDwvQXVkaWVuY2U+PC9BdWRpZW5jZVJlc3RyaWN0aW9uPjwvQ29uZGl0aW9ucz48QXR0cmlidXRlU3RhdGVtZW50PjxBdHRyaWJ1dGUgTmFtZT0iaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIj48QXR0cmlidXRlVmFsdWU+c2FtbC5qYWNrc29uQGV4YW1wbGUuY29tPC9BdHRyaWJ1dGVWYWx1ZT48L0F0dHJpYnV0ZT48QXR0cmlidXRlIE5hbWU9Imh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiPjxBdHRyaWJ1dGVWYWx1ZT5TYW1sIEphY2tzb248L0F0dHJpYnV0ZVZhbHVlPjwvQXR0cmlidXRlPjxBdHRyaWJ1dGUgTmFtZT0iaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZ2l2ZW5uYW1lIj48QXR0cmlidXRlVmFsdWU+U2FtbDwvQXR0cmlidXRlVmFsdWU+PC9BdHRyaWJ1dGU+PEF0dHJpYnV0ZSBOYW1lPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9zdXJuYW1lIj48QXR0cmlidXRlVmFsdWU+SmFja3NvbjwvQXR0cmlidXRlVmFsdWU+PC9BdHRyaWJ1dGU+PEF0dHJpYnV0ZSBOYW1lPSJlbWFpbCI+PEF0dHJpYnV0ZVZhbHVlPnNhbWwuamFja3NvbkBleGFtcGxlLmNvbTwvQXR0cmlidXRlVmFsdWU+PC9BdHRyaWJ1dGU+PEF0dHJpYnV0ZSBOYW1lPSJkaXNwbGF5TmFtZSI+PEF0dHJpYnV0ZVZhbHVlPlNhbWwgSmFja3NvbjwvQXR0cmlidXRlVmFsdWU+PEF0dHJpYnV0ZVZhbHVlPkNPUlBcc2FtbDwvQXR0cmlidXRlVmFsdWU+PC9BdHRyaWJ1dGU+PEF0dHJpYnV0ZSBOYW1lPSJmaXJzdE5hbWUiPjxBdHRyaWJ1dGVWYWx1ZT5TYW1sPC9BdHRyaWJ1dGVWYWx1ZT48L0F0dHJpYnV0ZT48QXR0cmlidXRlIE5hbWU9Imxhc3ROYW1lIj48QXR0cmlidXRlVmFsdWU+SmFja3NvbjwvQXR0cmlidXRlVmFsdWU+PC9BdHRyaWJ1dGU+PC9BdHRyaWJ1dGVTdGF0ZW1lbnQ+PEF1dGhuU3RhdGVtZW50IEF1dGhuSW5zdGFudD0iMjAxNS0wMy0wOVQxODo1NDoxOC4yOTlaIiBTZXNzaW9uSW5kZXg9Il80Zjc4MGFkMC0xNzg3LTQ5ZjctOGZmMi0zNWY5MDMyNWYwNTYiPjxBdXRobkNvbnRleHQ+PEF1dGhuQ29udGV4dENsYXNzUmVmPnVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDphYzpjbGFzc2VzOlBhc3N3b3JkUHJvdGVjdGVkVHJhbnNwb3J0PC9BdXRobkNvbnRleHRDbGFzc1JlZj48L0F1dGhuQ29udGV4dD48L0F1dGhuU3RhdGVtZW50PjwvQXNzZXJ0aW9uPjwvc2FtbHA6UmVzcG9uc2U+', 'base64').toString()
 
-    it('should reject response with invalid destination', function (done) {
-      var options = {
-        acsUrl: "https://example.com/sp",
-        issuer: 'urn:fixture-test',
-        thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
-        checkInResponseTo: false,
+  var responseOptions = {
+    audience: "urn:example:sp",
+    acsUrl: "https://localhost:5051/callback",
+    issuer: 'http://kdc.corp.example.com/adfs/services/trust',
+    thumbprint: 'F127098178127B5B5EB051CD54F7E0C2E5038D65',
+    requireResponseSignature: false,
+    checkExpiration: false,
+    checkDestination: true
+  }
+
+  
+
+  describe('validateSamlRequest', function() {
+
+    "https://localhost:5051/callback/slo?SAMLRequest=lVLbatwwEP0Vo3dZ0tqKHeGYLl0KhjSBpvShL0GWxo0bW3I1ctnPr9am9EJZ6OMMc%2bZcZhrU87Soe%2f%2fFr%2fEDfFsBY9ad7shzPQhb1WBofaNvaWmkoL0ZelprMH0p6puqkiT7BAFH7%2b7IIeck6xBX6BxG7WJqcSEpL6jgH3mhCqkOMi%2bk%2fEyyU2IZnY4b8iXGBRVjkzd6evEYleRSsFRMvTavDCdPsrfeIVyWrsEpr3FE5fQMqKJRT8f39yrxK7MPqdXhAmYcRrAke%2fDx0T2G4xAh%2fK2p5L80nefJodriuM6yBB%2b98RNpm81v2KHXQRoRwsUvaS9%2bk91Xa3Ljw5LDWc%2fLBKmYmbYDsjT5fTSALIYVY8N2lrZ5SFu7U%2fbOh1lfSULkYuuMlg7bqIJZj9PR2gCI5D%2fVXgLJv6Y7oHdvfpPasF1O2%2bwf9JR2J0DnLJzb51JrEAXn9DBUlpa3dUl1Oia1FZel6HXVV0XD%2foH82fzjIdsf&Signature=Q1BIypKo4yrbukTKQW4rExa4opQ73Ds9s03KRI1zMtpfe5DnzX4zFNAao8VZNNpNY9JPsut3%2fspYaZqGmhtRD%2bsCevdn13bg0%2b29B4aTn9QVNQRYMOPW6AvhF02nBtCjxpZyGMysKSs7eumO2qf%2b8621GRkerdzQ1LWx%2fFZV5bn5kL%2bXkzZzE0lkpjWFpLUstIwaZSndnU7%2fYP9Ml2w79iUCttoAjnnSv5BUjcmBwtYARroNweA5b4vKjOT1e8cAHuMc35vBWKBDjf9J4JG%2bTGTnkzp49SDC1dy5MbL1bP0q9iMClQdIaXdD%2bwNyL6O6s8KOQrLbM2oQtrrFn8QkrQ%3d%3d&SigAlg=http%3a%2f%2fwww.w3.org%2f2000%2f09%2fxmldsig%23rsa-sha1"
+
+
+
+
+  });      
+  
+
+  describe('validateSamlResponse', function() {
+
+    it('should return valid response', function (done) {
+      var samlp = new Samlp(responseOptions, new Assertion(responseOptions));
+
+      samlp.validateSamlResponse(samlpResponse, function (err, profile, response) {
+        expect(err).to.not.exist;
+
+        expect(profile).to.exist;
+        expect(profile.sessionIndex).to.equal('_4f780ad0-1787-49f7-8ff2-35f90325f056');
+        expect(profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']).to.equal('saml.jackson@example.com');
+        expect(profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']).to.equal('Saml Jackson');
+        expect(profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname']).to.equal('Saml');
+        expect(profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname']).to.equal('Jackson');
+        expect(profile.email).to.equal('saml.jackson@example.com');
+        expect(profile.displayName).to.have.members([ 'Saml Jackson', 'CORP\\saml' ]);
+        expect(profile.firstName).to.equal('Saml');
+        expect(profile.lastName).to.equal('Jackson');
+        expect(profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']).to.equal('saml.jackson@example.com');
+        expect(profile.nameIdAttributes.value).to.equal('saml.jackson@example.com');
+        expect(profile.nameIdAttributes.Format).to.equal('urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress');
+        expect(profile['http://schemas.microsoft.com/ws/2008/06/identity/claims/authenticationmethod']).to.equal('urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport');
+        expect(profile.issuer).to.equal('http://kdc.corp.example.com/adfs/services/trust');
+
+        expect(response).to.exist;
+        expect(response.id).to.equal('_f3c2896c-cc93-4316-9934-6643b6606e3e');
+        expect(response.version).to.equal('2.0');
+        expect(response.issueInstant).to.equal('2015-03-09T18:54:18.553Z');
+        expect(response.destination).to.equal(responseOptions.acsUrl);
+        expect(response.issuer).to.equal(responseOptions.issuer);
+        expect(response.statusCode).to.equal('urn:oasis:names:tc:SAML:2.0:status:Success');
+        expect(response.assertionEncrypted).to.be.false;
+        expect(response.assertionSigned).to.be.true;
+        expect(response.responseSigned).to.be.false;
+        done();
+      });
+    });
+
+
+    it('should error with response not signed', function (done) {
+      var options = xtend(responseOptions, {
+        requireResponseSignature: true
+      });
+      var samlp = new Samlp(options, new Assertion(options));
+
+      samlp.validateSamlResponse(samlpResponse, function (err, profile, response) {
+        expect(err).to.exist;
+        expect(profile).to.not.exist;
+        expect(response).to.not.exist;
+        expect(err.message).to.contain('SAML Response message must contain a signature');
+        done();
+      });
+    });
+ 
+    it('should error with invalid destination', function (done) {
+      var options = xtend(responseOptions, {
+        acsUrl: "https://wrong.example.com/sp",
         checkDestination: true
-      };
-      var samlp = new Samlp(options, new Assertion.SAML(options));
+      });
+      var samlp = new Samlp(options, new Assertion(options));
 
       samlp.validateSamlResponse(samlpResponse, function (err) {
         expect(err.message).to.contain('must match Assertion Consumer Service URL');
@@ -419,25 +493,22 @@ describe('samlp (unit tests)', function () {
       });
     });
 
-    it('should return response with valid destination', function (done) {
-      var options = {
-        realm: 'https://auth0-dev-ed.my.salesforce.com',
-        acsUrl: "https://auth0-dev-ed.my.salesforce.com",
-        issuer: 'urn:fixture-test',
-        thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
-        checkInResponseTo: false,
-        checkDestination: true,
-        checkExpiration: false
-      };
-      var samlp = new Samlp(options, new Assertion.SAML(options));
+
+    it('should error with invalid issuer', function (done) {
+      var options = xtend(responseOptions, {
+        issuer: 'urn:foo'
+      });
+      var samlp = new Samlp(options, new Assertion(options));
 
       samlp.validateSamlResponse(samlpResponse, function (err, profile, response) {
-        expect(err).to.not.exist;
-        expect(profile).to.exist;
-        expect(response).to.exist;
+        expect(err).to.exist;
+        expect(profile).to.not.exist;
+        expect(response).to.not.exist;
+        expect(err.message).to.contain('SAML Response Issuer');
         done();
       });
-    });
+    });    
+
   });
 
   describe('extractAssertion', function () {
@@ -468,7 +539,7 @@ describe('samlp (unit tests)', function () {
       });
     });
 
-    it('should throws error if EncryptedAssertion is present but options.encryptionKey was not specified', function (done) {
+    it('should throw error if EncryptedAssertion is present but options.encryptionKey was not specified', function (done) {
       var options = {};
       var samlp = new Samlp(options);
       samlp.extractAssertion(samlpReponseWithEncryptedAssertion, options, function (err) {
@@ -477,7 +548,7 @@ describe('samlp (unit tests)', function () {
       });
     });
 
-    it('should returns decrypted assertion', function (done) {
+    it('should return decrypted assertion', function (done) {
       var options = {
         decryptionKey: fs.readFileSync(__dirname + '/test-decryption.key')
       };
