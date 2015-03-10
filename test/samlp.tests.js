@@ -1,15 +1,15 @@
-var expect = require('chai').expect;
-var server = require('./fixture/samlp-server');
-var request = require('request');
-var qs = require('querystring');
-var cheerio = require('cheerio');
-var xmldom = require('xmldom');
-var Assertion = require('../lib/sso-kit/assertion');
-var Samlp = require('../lib/sso-kit/samlp');
-var fs = require('fs');
-var zlib = require('zlib');
-var url = require('url');
-var xtend = require('xtend');
+var Assertion = require('../lib/sso-kit/assertion'),
+    cheerio   = require('cheerio'),
+    expect    = require('chai').expect,
+    fs        = require('fs'),
+    qs        = require('querystring'),
+    request   = require('request'),
+    Samlp     = require('../lib/sso-kit/samlp'),
+    server    = require('./fixture/samlp-server'),
+    url       = require('url'),
+    Parser    = require('xmldom').DOMParser,
+    xtend     = require('xtend'),
+    zlib      = require('zlib');
 
 describe('samlp (functional tests)', function () {
   before(function (done) {
@@ -296,7 +296,7 @@ describe('samlp (functional tests)', function () {
       zlib.inflateRaw(new Buffer(SAMLRequest, 'base64'), function (err, buffer) {
         if (err) return done(err);
         var request = buffer.toString();
-        var doc = new xmldom.DOMParser().parseFromString(request);
+        var doc = new Parser().parseFromString(request);
         var iss = doc.documentElement.getElementsByTagName('saml:Issuer')[0];
 
         expect(doc.documentElement.getAttribute('ID'))
@@ -522,7 +522,7 @@ describe('samlp (unit tests)', function () {
       samlp.extractAssertion(samlpResponse, options, function (err, assertion) {
         if (err) { done(err); }
 
-        var doc = new xmldom.DOMParser().parseFromString(assertion.toString());
+        var doc = new Parser().parseFromString(assertion.toString());
         var attributes = doc.documentElement.getElementsByTagName('saml:Attribute');
         expect(attributes.length).to.equal(5);
         expect(attributes[0].getAttribute('Name')).to.equal('http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier');
@@ -557,7 +557,7 @@ describe('samlp (unit tests)', function () {
       samlp.extractAssertion(samlpReponseWithEncryptedAssertion, options, function (err, assertion) {
         if (err) { done(err); }
 
-        var doc = new xmldom.DOMParser().parseFromString(assertion.toString());
+        var doc = new Parser().parseFromString(assertion.toString());
         var attributes = doc.documentElement.getElementsByTagName('Attribute');
         expect(attributes.length).to.equal(8);
         expect(attributes[0].getAttribute('Name')).to.equal('http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress');

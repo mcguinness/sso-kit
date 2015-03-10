@@ -1,13 +1,13 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var session = require('express-session');
-var http = require('http');
-var samlp = require('samlp');
-var xtend = require('xtend');
-var fs = require('fs');
-var path = require('path');
-var passport = require('passport');
-var SamlpStrategy = require('../../lib/sso-kit').Strategy.Samlp;
+var bodyParser    = require('body-parser');
+    express       = require('express'),
+    fs            = require('fs'),
+    http          = require('http'),
+    passport      = require('passport'),
+    path          = require('path'),
+    samlp         = require('samlp'),
+    SamlpStrategy = require('../../lib/sso-kit').Strategy.Samlp,
+    session       = require('express-session'),
+    xtend         = require('xtend');
 
 /**
  * Globals
@@ -21,7 +21,7 @@ var defaultOptions = {
     audience: 'urn:fixture:sp',
     issuer: 'urn:fixture:idp',
     idpSsoUrl: idpSsoUrl,
-    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309',
+    thumbprint: 'C5CA6D07A5D961110D3418E844BE314B2F620B72',
     checkInResponseTo: false,
     checkDestination: false
 }
@@ -42,8 +42,8 @@ var fakeUser = {
 };
 
 var credentials = {
-  cert:     fs.readFileSync(path.join(__dirname, '../test-auth0.pem')),
-  key:      fs.readFileSync(path.join(__dirname, '../test-auth0.key'))
+  cert:     fs.readFileSync(path.join(__dirname, '../test-idp.pem')),
+  key:      fs.readFileSync(path.join(__dirname, '../test-idp.key'))
 };
 
 var verifyProfile = function(profile, response, done) {

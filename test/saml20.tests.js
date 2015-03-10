@@ -1,10 +1,10 @@
-var assert = require('assert'),
-    fs = require('fs'),
-    utils = require('./utils'),
-    moment = require('moment'),
-    should = require('should'),
-    saml20 = require('saml').Saml20,
-    Assertion = require('../lib/sso-kit/assertion');
+var assert    = require('assert'),
+    Assertion = require('../lib/sso-kit/assertion'),
+    fs        = require('fs'),
+    moment    = require('moment'),
+    saml20    = require('saml').Saml20,
+    should    = require('should'),
+    utils     = require('./utils');
 
 describe('saml 2.0 assertion', function () {
   var options = {

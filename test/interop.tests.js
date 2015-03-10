@@ -1,18 +1,16 @@
-var assert = require('assert'),
-    fs = require('fs'),
-    utils = require('./utils'),
-    moment = require('moment'),
-    should = require('should'),
-    saml11 = require('saml').Saml11,
+var assert    = require('assert'),
     Assertion = require('../lib/sso-kit/assertion'),
-    Samlp = require('../lib/sso-kit/samlp');
-
-var request = require('request');
-var server = require('./fixture/samlp-server');
-var expect = require('chai').expect;
-
-var Parser = require('xmldom').DOMParser,
-    SignedXml = require('xml-crypto').SignedXml;
+    expect    = require('chai').expect;
+    fs        = require('fs'),
+    moment    = require('moment'),
+    Parser    = require('xmldom').DOMParser,
+    request   = require('request'),
+    saml11    = require('saml').Saml11,
+    Samlp     = require('../lib/sso-kit/samlp'),
+    server    = require('./fixture/samlp-server'),
+    should    = require('should'),
+    SignedXml = require('xml-crypto').SignedXml,
+    utils     = require('./utils'),
 
 describe('interop', function () {
 

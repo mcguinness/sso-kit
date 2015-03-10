@@ -1,10 +1,10 @@
-var assert = require('assert'),
-    fs = require('fs'),
-    utils = require('./utils'),
-    moment = require('moment'),
-    should = require('should'),
-    saml11 = require('saml').Saml11,
-    Assertion = require('../lib/sso-kit/assertion');
+var assert    = require('assert'),
+    Assertion = require('../lib/sso-kit/assertion'),
+    fs        = require('fs'),
+    moment    = require('moment'),
+    saml11    = require('saml').Saml11,
+    should    = require('should'),
+    utils     = require('./utils');
 
 describe('saml 1.1 assertion', function () {
 

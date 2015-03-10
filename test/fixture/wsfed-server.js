@@ -1,21 +1,20 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var session = require('express-session');
-var http = require('http');
-var wsfed = require('wsfed');
-var xtend = require('xtend');
-var fs = require('fs');
-var path = require('path');
-
-var passport = require('passport');
-var WsFedStrategy = require('../../lib/sso-kit/strategy').WsFed;
+var bodyParser    = require('body-parser'),
+    express       = require('express'),
+    fs            = require('fs'),
+    http          = require('http'),
+    passport      = require('passport'),
+    path          = require('path'),
+    session       = require('express-session'),
+    wsfed         = require('wsfed'),
+    WsFedStrategy = require('../../lib/sso-kit/strategy').WsFed,
+    xtend         = require('xtend');
 
 passport.use(new WsFedStrategy(
   {
     path: '/callback',
     realm: 'urn:fixture-test',
     identityProviderUrl: 'http://localhost:5050/login',
-    thumbprint: '5ca6e1202eafc0a63a5b93a43572eb2376fed309'
+    thumbprint: 'C5CA6D07A5D961110D3418E844BE314B2F620B72'
   },
   function(profile, done) {
     return done(null, profile);
@@ -38,8 +37,8 @@ var fakeUser = {
 };
 
 var credentials = {
-  cert:     fs.readFileSync(path.join(__dirname, '../test-auth0.pem')),
-  key:      fs.readFileSync(path.join(__dirname, '../test-auth0.key'))
+  cert:     fs.readFileSync(path.join(__dirname, '../test-idp.pem')),
+  key:      fs.readFileSync(path.join(__dirname, '../test-idp.key'))
 };
 
 passport.serializeUser(function(user, done) {

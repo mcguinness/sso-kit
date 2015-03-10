@@ -1,7 +1,7 @@
-var expect = require('chai').expect;
-var jwt = require('jsonwebtoken');
-var fs = require('fs');
-var Strategy = require('../lib/sso-kit/strategy').WsFed;
+var expect   = require('chai').expect,
+    fs       = require('fs'),
+    jwt      = require('jsonwebtoken'),
+    Strategy = require('../lib/sso-kit/strategy').WsFed;
 
 var cert = {
   pub: fs.readFileSync(__dirname + '/test-idp.pem'),

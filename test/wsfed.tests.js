@@ -1,7 +1,7 @@
-var expect = require('chai').expect;
-var server = require('./fixture/wsfed-server');
-var request = require('request');
-var cheerio = require('cheerio');
+var cheerio = require('cheerio'),
+    expect  = require('chai').expect,
+    request = require('request'),
+    server  = require('./fixture/wsfed-server');
 
 describe('wsfed', function () {
   before(function (done) {
